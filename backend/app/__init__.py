@@ -30,8 +30,20 @@ def create_app():
         return jsonify({'message': 'API is working!'})
     
     # Register blueprints
-    # Uncomment when auth blueprint is ready:
-    # from app.api.auth import auth_bp
-    # app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    from app.api.auth import auth_bp
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    
+    from app.api.courses import courses_bp
+    app.register_blueprint(courses_bp, url_prefix='/api/courses')
+    
+    from app.api.notes import notes_bp
+    app.register_blueprint(notes_bp, url_prefix='/api')
+    
+    from app.api.questions import questions_bp
+    app.register_blueprint(questions_bp, url_prefix='/api')
+    
+    # Create database tables
+    with app.app_context():
+        db.create_all()
     
     return app

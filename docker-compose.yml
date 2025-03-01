@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - FLASK_APP=wsgi.py
+      - FLASK_ENV=development
+      - SECRET_KEY=dev-key
+      - JWT_SECRET_KEY=jwt-dev-key
+      - DATABASE_URL=sqlite:///app.db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    command: flask run --host=0.0.0.0
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+    command: npm start

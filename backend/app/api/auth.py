@@ -9,42 +9,46 @@ auth_bp = Blueprint('auth', __name__)
 def register():
     data = request.get_json()
     
-    # Check required fields
     if not data or not data.get('username') or not data.get('email') or not data.get('password'):
-        return jsonify({"error": "Missing required fields"}), 400
+        return jsonify({"error": "Username, email, and password are required"}), 400
     
-    # Check if user exists
+    # Check if username already exists
     if User.query.filter_by(username=data['username']).first():
         return jsonify({"error": "Username already exists"}), 400
-        
-    # Create user
-    user = User(username=data['username'], email=data['email'])
-    user.password = data['password']
     
-    db.session.add(user)
+    # Check if email already exists
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({"error": "Email already registered"}), 400
+    
+    # Create new user
+    new_user = User(
+        username=data['username'],
+        email=data['email']
+    )
+    new_user.password = data['password']  # This will hash the password
+    
+    db.session.add(new_user)
     db.session.commit()
     
-    # Create token
-    access_token = create_access_token(identity=user.id)
+    # Generate access token
+    access_token = create_access_token(identity=new_user.id)
     
-    return jsonify({"message": "User created", "access_token": access_token}), 201
+    return jsonify({"message": "User registered successfully", "access_token": access_token}), 201
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
     
-    # Check required fields
     if not data or not data.get('username') or not data.get('password'):
-        return jsonify({"error": "Missing username or password"}), 400
+        return jsonify({"error": "Username and password are required"}), 400
     
-    # Find user
+    # Find user by username
     user = User.query.filter_by(username=data['username']).first()
     
-    # Check password
     if not user or not user.check_password(data['password']):
-        return jsonify({"error": "Invalid credentials"}), 401
+        return jsonify({"error": "Invalid username or password"}), 401
     
-    # Create token
+    # Generate access token
     access_token = create_access_token(identity=user.id)
     
-    return jsonify({"access_token": access_token}), 200
+    return jsonify({"message": "Login successful", "access_token": access_token}), 200
