@@ -3,8 +3,10 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.user import User
 from app.models.study_models import Course, Note
+from app.ai_service import AIService
 
 notes_bp = Blueprint('notes', __name__)
+ai_service = AIService()
 
 # Get all notes for a course
 @notes_bp.route('/course/<int:course_id>/notes', methods=['GET'])
@@ -139,7 +141,7 @@ def delete_note(note_id):
     
     return jsonify({"message": "Note deleted successfully"}), 200
 
-# Generate notes with AI (placeholder for now)
+# Generate notes with AI
 @notes_bp.route('/course/<int:course_id>/generate-notes', methods=['POST'])
 @jwt_required()
 def generate_notes(course_id):
@@ -154,28 +156,34 @@ def generate_notes(course_id):
     if not data or not data.get('topic'):
         return jsonify({"error": "Topic is required"}), 400
     
-    # TODO: Implement actual AI generation with OpenAI/LangChain
-    # For now, return placeholder content
+    # Get optional detail level
+    detail_level = data.get('detail_level', 'medium')
     
-    generated_content = f"These are auto-generated notes for {data['topic']} in {course.title}.\n\n"
-    generated_content += "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor, "
-    generated_content += "nisl ac ultricies ultricies, nisl nisl aliquam nisl, eget aliquam nisl "
-    generated_content += "nisl eget nisl. Nullam auctor, nisl ac ultricies ultricies, nisl nisl aliquam nisl, "
-    generated_content += "eget aliquam nisl nisl eget nisl."
-    
-    new_note = Note(
-        title=f"Generated Notes: {data['topic']}",
-        content=generated_content,
-        course_id=course_id
-    )
-    
-    db.session.add(new_note)
-    db.session.commit()
-    
-    return jsonify({
-        'id': new_note.id,
-        'title': new_note.title,
-        'content': new_note.content,
-        'created_at': new_note.created_at.isoformat(),
-        'course_id': new_note.course_id
-    }), 201
+    try:
+        # Generate notes using AI service
+        generated_content = ai_service.generate_notes(
+            course_title=course.title,
+            topic=data['topic'],
+            detail_level=detail_level
+        )
+        
+        # Create a new note with generated content
+        new_note = Note(
+            title=f"Notes: {data['topic']}",
+            content=generated_content,
+            course_id=course_id
+        )
+        
+        db.session.add(new_note)
+        db.session.commit()
+        
+        return jsonify({
+            'id': new_note.id,
+            'title': new_note.title,
+            'content': new_note.content,
+            'created_at': new_note.created_at.isoformat(),
+            'course_id': new_note.course_id
+        }), 201
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
