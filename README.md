@@ -1,7 +1,7 @@
 # Lock In - Student Exam Preparation Application
 
 ## Overview
-Study Buddy is an application designed to help students prepare effectively for exams by implementing proven study techniques and organizing study materials. The app addresses common student challenges including test anxiety, lack of preparation, and poor time management.
+LockIn is an application designed to help students prepare effectively for exams by implementing proven study techniques and organizing study materials. The app addresses common student challenges including test anxiety, lack of preparation, and poor time management.
 
 ## Key Features
 - **Smart Content Generation**: Creates customized notes, practice questions, and mock tests based on course materials
@@ -23,7 +23,7 @@ Study Buddy is an application designed to help students prepare effectively for 
 
 ## Project Structure
 ```
-study-buddy/
+LockIn/
 ├── public/
 ├── src/
 │   ├── components/     # UI components
